@@ -1,0 +1,24 @@
+{
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "062672ef-bea8-429c-8c69-c932480ec6dc++6894" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "062672ef-bea8-429c-8c69-c932480ec6dc++6894" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "0A13986B-4DBE-47CD-ABF4-EB066CB91BFA",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "062672ef-bea8-429c-8c69-c932480ec6dc++6894" : ""
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "ios_camp",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "ios_camp.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/rendu-svn.etna-alternance.net\/v2\/2021_Prep'ETNA_SDC-DIOS_5_0-2662",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "062672ef-bea8-429c-8c69-c932480ec6dc++6894"
+    }
+  ]
+}

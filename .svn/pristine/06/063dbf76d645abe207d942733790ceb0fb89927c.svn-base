@@ -1,0 +1,121 @@
+//
+//  logView.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 14/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+extension String {
+    
+    func sha256() -> String{
+        if let stringData = self.data(using: String.Encoding.utf8) {
+            return hexStringFromData(input: digest(input: stringData as NSData))
+        }
+        return ""
+    }
+    
+    private func digest(input : NSData) -> NSData {
+        let digestLength = Int(CC_SHA256_DIGEST_LENGTH)
+        var hash = [UInt8](repeating: 0, count: digestLength)
+        CC_SHA256(input.bytes, UInt32(input.length), &hash)
+        return NSData(bytes: hash, length: digestLength)
+    }
+    
+    private  func hexStringFromData(input: NSData) -> String {
+        var bytes = [UInt8](repeating: 0, count: input.length)
+        input.getBytes(&bytes, length: input.length)
+        
+        var hexString = ""
+        for byte in bytes {
+            hexString += String(format:"%02x", UInt8(byte))
+        }
+        
+        return hexString
+    }
+    
+}
+
+class logView: UIViewController {
+    
+    @IBOutlet weak var login: UITextField!
+    @IBOutlet weak var password: UITextField!
+    @IBOutlet weak var error_mail: UIButton!
+    @IBOutlet weak var error_password: UIButton!
+    var json: [String:AnyObject]!
+    var identifier : [String:AnyObject]!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        error_mail.isHidden = true
+        error_password.isHidden = true
+    }
+    
+    @IBAction func logIn(_ sender: Any) {
+        json = nil
+        if (login.text == "" ){
+            error_mail.isHidden = false
+        } else {
+            error_mail.isHidden = true
+        }
+        if (password.text == "" ){
+            error_password.isHidden = false
+        } else {
+            error_password.isHidden = true
+        }
+        if (error_password.isHidden == false || error_mail.isHidden == false) {
+            return
+        }
+
+        let URLString = "http://172.16.1.200/api/connect/index.php?mail="+login.text!+"&pwd="+(password.text?.sha256())!
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+        
+            self.json = obj as! [String : AnyObject]
+
+        }
+        
+        while (self.json == nil) {}
+        
+
+        let key = json["user_exist"] as! Bool
+        if (key) {
+            self.identifier = json["user_infos"] as? [String:AnyObject]
+            let the_id = self.identifier["id"] as? String
+            self.performSegue(withIdentifier: "logged", sender: (Any).self)
+        }
+        else {
+            print("t pas bo")
+        }
+    }
+
+ 
+        func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let dest : ViewController = segue.destination as? ViewController {
+        dest.id = identifier["id"] as? String
+        } else { return }
+    }
+}
+    
+

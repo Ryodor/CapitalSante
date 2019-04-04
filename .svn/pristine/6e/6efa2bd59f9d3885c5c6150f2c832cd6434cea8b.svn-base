@@ -1,0 +1,70 @@
+//
+//  add_medecin.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 20/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class add_medin: UIViewController {
+    
+    var id_add_medecin: String!
+    @IBOutlet weak var surname: UITextField!
+    @IBOutlet weak var name: UITextField!
+    @IBOutlet weak var phone_fix: UITextField!
+    @IBOutlet weak var phone_mobile: UITextField!
+    @IBOutlet weak var address: UITextField!
+    @IBOutlet weak var work: UITextField!
+    var check : [String:AnyObject]!
+
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? medecin {
+            vc.id_medecin = self.id_add_medecin
+        }
+    }
+    
+    @IBAction func submit(_ sender: Any) {
+        if (surname.text! == "" || name.text! == "" || phone_fix.text! == "" || phone_mobile.text! == "" || address.text! == "" || work.text! == "") {
+            return
+        }
+        let URLString = "http://172.16.1.200/api/add_doctor/index.php?id="+id_add_medecin!+"&name="+name.text!+"&surname="+surname.text!+"&hphone="+phone_fix.text!+"&cphone="+phone_mobile.text!+"&address="+address.text!+"&type="+work.text!
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.check = obj as! [String : AnyObject]
+            
+        }
+       while (self.check == nil) {}
+        self.performSegue(withIdentifier: "back_medecin", sender: (Any).self)
+    }
+    
+    func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+
+    
+}

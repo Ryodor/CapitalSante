@@ -1,0 +1,81 @@
+//
+//  inscription.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 17/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class inscription: UIViewController
+{
+    
+    @IBOutlet weak var gender: UISegmentedControl!
+    @IBOutlet weak var mail: UITextField!
+    @IBOutlet weak var password: UITextField!
+    @IBOutlet weak var password_bis: UITextField!
+    @IBOutlet weak var name: UITextField!
+    @IBOutlet weak var surname: UITextField!
+    @IBOutlet weak var error: UILabel!
+    var json: [String:AnyObject]!
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        error.isHidden = true
+    }
+
+    @IBAction func signUp(_ sender: Any) {
+        
+        if (mail.text! == "" || password.text! == "" || password_bis.text! == "" || name.text! == "" || surname.text! == "" || password.text! != password_bis.text!) {
+            error.isHidden = false
+            return
+        }
+        else {
+            error.isHidden = true
+        }
+        let title:Int = gender.selectedSegmentIndex
+        var tmp = ""
+        if title == 0 {
+            tmp = "M"
+        } else {
+            tmp = "F"
+        }
+        let URLString = "http://172.16.1.200/api/subscribe/index.php?mail=" + mail.text! + "&pwd=" + (password.text?.sha256())! + "&name=" + name.text! + "&surname=" + surname.text! + "&sexe=" + tmp
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            self.json = obj as! [String : AnyObject]
+        }
+        
+        while (self.json == nil) {}
+
+        let key = json["error"] as! Bool
+        if (!key) {
+            self.performSegue(withIdentifier: "iden", sender: (Any).self)
+        } else {
+            error.isHidden = false
+        }
+    }
+    
+    func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+
+}

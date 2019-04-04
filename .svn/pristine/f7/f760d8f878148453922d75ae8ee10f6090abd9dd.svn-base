@@ -1,0 +1,63 @@
+//
+//  medicament.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 18/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class medicament: ViewController {
+    
+    var id_medicament : String!
+    var info_medoc: [String:AnyObject]!
+    @IBOutlet weak var display: UITextView!
+    
+    override func viewDidLoad() {
+
+        
+        let URLString = "http://172.16.1.200/api/get_drug/index.php?id="+id_medicament
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        
+        execTask(request: request){ (ok , obj) in
+            
+            self.info_medoc = obj as! [String : AnyObject]
+            
+        }
+        while (self.info_medoc == nil) {}
+        
+        print(info_medoc)
+        var tmp = self.info_medoc["nb_drug"] as? Int
+        if let current = info_medoc["drug"] as? [String:AnyObject] {
+            var i = 0
+            display.text = "-----------------------------------------\n"
+            while (tmp! > 0) {
+                var key = current["drugs"+String(i)] as? [String:AnyObject]
+                var str = "Name: \(key!["name"]!)\nCommentaire: \(key!["comment"]!)\nQuantité: \(key!["quantity"]!)\n-----------------------------------------\n"
+                display.text = display.text + str
+                i = i + 1
+                tmp = tmp! - 1
+            }
+        }
+        if display.text == "" {
+            display.text = "Vous n'avez aucun médicament referencé !"
+        }
+        
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? ordo  {
+            vc.id_ordo = self.id_medicament
+        } else if let vc = segue.destination as? add_medicament {
+            vc.id_add_medicament = self.id_medicament
+        }else if let vc = segue.destination as? medecin {
+            vc.id_medecin = self.id_medicament
+        } else  if let vc = segue.destination as? ViewController{
+            vc.id = self.id_medicament
+        }
+    }
+}

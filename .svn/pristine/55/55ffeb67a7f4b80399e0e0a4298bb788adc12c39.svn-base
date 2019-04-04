@@ -1,0 +1,64 @@
+//
+//  add_medicament.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 21/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class add_medicament: UIViewController {
+    @IBOutlet weak var doctor: UITextField!
+    var check: [String:AnyObject]!
+    @IBOutlet weak var medicament: UITextField!
+    var id_add_medicament: String!
+    @IBOutlet weak var quantity: UITextField!
+    @IBOutlet weak var comment: UITextField!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? medicament {
+            vc.id_medicament = self.id_add_medicament
+        }
+    }
+    @IBAction func add_medoc(_ sender: Any) {
+        if (comment.text! == "" || doctor.text! == "" || quantity.text! == "") {
+            return
+        }
+        let URLString = "http://172.16.1.200/api/add_drug/index.php?id="+id_add_medicament!+"&name="+medicament.text!+"&comment="+comment.text!+"&id_doctor="+doctor.text!+"&quantity="+quantity.text!
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.check = obj as! [String : AnyObject]
+            
+        }
+        while (self.check == nil) {}
+        self.performSegue(withIdentifier: "back_medicament", sender: (Any).self)
+    }
+    
+    func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+
+}

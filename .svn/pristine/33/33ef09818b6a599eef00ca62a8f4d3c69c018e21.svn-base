@@ -1,0 +1,62 @@
+//
+//  add_ordo.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 20/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class add_ordo: UIViewController {
+    
+    var id_add_ordo: String!
+    @IBOutlet weak var name: UITextField!
+    @IBOutlet weak var comment: UITextField!
+    @IBOutlet weak var date_start: UITextField!
+    @IBOutlet weak var date_end: UITextField!
+    @IBOutlet weak var doctor: UITextField!
+    var check: [String:AnyObject]!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? ordo {
+        vc.id_ordo = self.id_add_ordo
+        }
+    }
+    @IBAction func add_ordonance(_ sender: Any) {
+        if (comment.text! == "" || name.text! == "" || date_end.text! == "" || date_start.text == "" || doctor.text == "") {
+            return
+        }
+        let URLString = "http://172.16.1.200/api/add_prescription/index.php?id_user="+id_add_ordo!+"&name="+name.text!+"&type=png&link=testcom&comment="+comment.text!+"&start_date="+date_start.text!+"&end_date="+date_end.text!+"&id_doctor="+doctor.text!
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.check = obj as! [String : AnyObject]
+            
+        }
+        while (self.check == nil) {}
+        self.performSegue(withIdentifier: "back_ordo", sender: (Any).self)
+    }
+    func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+}

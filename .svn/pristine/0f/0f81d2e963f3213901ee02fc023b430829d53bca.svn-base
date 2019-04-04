@@ -1,0 +1,66 @@
+//
+//  medecin.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 18/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class medecin: ViewController {
+    
+    var id_medecin : String!
+    var info_medecin: [String:AnyObject]!
+    @IBOutlet weak var display: UITextView!
+    
+    override func viewDidLoad() {
+
+        
+        
+        let URLString = "http://172.16.1.200/api/get_doctor/index.php?id="+id_medecin
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        
+        execTask(request: request){ (ok , obj) in
+            
+            self.info_medecin = obj as! [String : AnyObject]
+            
+        }
+        while (self.info_medecin == nil) {}
+        
+        print(info_medecin)
+        var tmp = self.info_medecin["test"] as? Int
+        if let current = info_medecin["doctors"] as? [String:AnyObject] {
+            var i = 0
+            display.text = "-----------------------------------------\n"
+            while (tmp! > 0) {
+                var key = current["doctor"+String(i)] as? [String:AnyObject]
+                var str = "Name: \(key!["name"]!) \(key!["surname"]!):\n\nId: \(key!["id"]!)\nType: \(key!["type"]!)\nTelephone: \(key!["cell_phone"]!)\nAdresse: \(key!["address"]!)\n\n-----------------------------------------\n"
+                display.text = display.text + str
+                i = i + 1
+                tmp = tmp! - 1
+            }
+        }
+        if display.text == "" {
+            display.text = "Vous n'avez aucun medecin referencé !"
+        }
+
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if  let vc = segue.destination as? medicament {
+            vc.id_medicament = self.id_medecin
+        } else if let vc = segue.destination as? add_medin {
+            vc.id_add_medecin = self.id_medecin
+        }else if let vc = segue.destination as? ordo {
+            vc.id_ordo = self.id_medecin
+        } else if let vc = segue.destination as? ViewController {
+            vc.id = self.id_medecin
+        }
+    }
+    
+    
+}

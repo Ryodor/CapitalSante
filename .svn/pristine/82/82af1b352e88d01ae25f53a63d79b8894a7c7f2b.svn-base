@@ -1,0 +1,131 @@
+//
+//  ViewController.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 12/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import UIKit
+import Foundation
+
+class ViewController: UIViewController {
+
+    @IBOutlet weak var side_menu: UIView!
+    var menu_statut = true
+    var id : String!
+    var json_view : [String:AnyObject]!
+    var nbr_ordo : [String:AnyObject]!
+    @IBOutlet weak var label_name: UILabel!
+    @IBOutlet weak var label_familyName: UILabel!
+    @IBOutlet weak var label_mail: UILabel!
+    @IBOutlet private var label_number: UILabel!
+    @IBOutlet weak var place_holder: UITextView!
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        side_menu.isHidden = true
+        menu_statut = true
+        side_menu.layer.zPosition = 9
+        
+        var URLString = "http://172.16.1.200/api/get_info/index.php?id="+id
+        var url = URL(string: URLString)
+        var request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.json_view = obj as! [String : AnyObject]
+            
+        }
+        while (self.json_view == nil) {}
+        let save = self.json_view["user_infos"] as! [String:AnyObject]
+        
+        print(save)
+        label_name.text = save["name"] as? String
+        label_mail.text = save["mail"] as? String
+        label_familyName.text = save["surname"] as? String
+        
+        URLString = "http://172.16.1.200/api/current_prescription/index.php?id="+id
+        url = URL(string: URLString)
+        request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.nbr_ordo = obj as! [String : AnyObject]
+            
+        }
+        while (self.nbr_ordo == nil) {}
+        
+        
+        
+        var tmp = nbr_ordo["nb_prescription"] as? Int
+        let current = nbr_ordo["current"] as? [String:AnyObject]
+        label_number.text = String(describing: tmp!)
+        var i = 0
+        while (tmp! > 0) {
+            var key = current?["prescription"+String(i)] as? [String:AnyObject]
+            var str = "Ordonnance numero : \(i + 1):\n{\nMedicament: \(key!["name"]!)\nDate de debut: \(key!["start_date"]!)\n}\n\n"
+            place_holder.text = place_holder.text + str
+            i = i + 1
+            tmp = tmp! - 1
+        }
+    }
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+
+    @IBAction func move_menu(_ sender: Any) {
+        UIView.animate(withDuration: 0.4, animations: { () -> Void in
+        if (self.menu_statut){
+            self.side_menu.isHidden = false
+            self.side_menu.transform = CGAffineTransform(translationX: 100, y: 0)
+        } else{
+            self.side_menu.transform = CGAffineTransform(translationX: -100, y: 0)
+        }
+        self.menu_statut = !self.menu_statut
+        })
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? ordo {
+            vc.id_ordo = self.id
+        } else if let vc = segue.destination as? medecin {
+            vc.id_medecin = self.id
+        } else if let vc = segue.destination as? medicament {
+            vc.id_medicament = self.id
+        }
+    }
+    
+    func execTask(request: URLRequest, taskCallback: @escaping (Bool,
+        AnyObject?) -> ()) {
+        
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        let task = session.dataTask(with: request, completionHandler: {(data, response, error) -> Void in
+            if let data = data {
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: AnyObject]
+                if let response = response as? HTTPURLResponse , 200...299 ~= response.statusCode {
+                    taskCallback(true, json as AnyObject?)
+                } else {
+                    taskCallback(false, json as AnyObject?)
+                }
+            }
+        })
+        task.resume()
+    }
+
+    
+    @IBAction func swipeRight(_ sender: UISwipeGestureRecognizer) {
+        if (menu_statut){
+        self.move_menu(self)
+        }
+    }
+    
+    
+    @IBAction func swipeLeft(_ sender: UISwipeGestureRecognizer) {
+        if (!menu_statut){
+            self.move_menu(self)
+        }
+    }
+    
+}
+

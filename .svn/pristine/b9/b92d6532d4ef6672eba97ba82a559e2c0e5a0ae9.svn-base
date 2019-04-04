@@ -1,0 +1,62 @@
+//
+//  ordonnance.swift
+//  ios_camp
+//
+//  Created by Thibaut GENDARME on 18/04/2017.
+//  Copyright © 2017 Thibaut GENDARME. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CommonCrypto
+
+class ordo: ViewController {    
+    
+    var id_ordo : String!
+    var ordonnances: [String:AnyObject]!
+    @IBOutlet weak var display: UITextView!
+    
+    override func viewDidLoad() {
+        
+        
+        let URLString = "http://172.16.1.200/api/get_prescription/index.php?id="+id_ordo
+        let url = URL(string: URLString)
+        let request = URLRequest(url: url!)
+        execTask(request: request){ (ok , obj) in
+            
+            self.ordonnances = obj as! [String : AnyObject]
+            
+        }
+        while (self.ordonnances == nil) {}
+
+        var tmp = self.ordonnances["nb_prescription"] as? Int
+        if let current = ordonnances["prescription"] as? [String:AnyObject] {
+        var i = 0
+        display.text = "-----------------------------------------\n"
+        while (tmp! > 0) {
+            var key = current["prescription"+String(i)] as? [String:AnyObject]
+            if var doc = key!["info_doctor"] as? [String:AnyObject] {
+            var str = "Ordonnance delivre par  \(doc["name"]!) \(doc["surname"]!):\nMedicament: \(key!["name"]!)\nDate de debut: \(key!["start_date"]!)\nDate de fin: \(key!["end_date"]!)\n Commentaire: \(key!["comment"]!)\n-----------------------------------------\n"
+            display.text = display.text + str
+            }
+            i = i + 1
+            tmp = tmp! - 1
+            }
+        }
+        if display.text == "" {
+            display.text = "Vous n'avez aucune ordonance dans votre historique !"
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let vc = segue.destination as? medicament {
+            vc.id_medicament = self.id_ordo
+        } else if let vc = segue.destination as? add_ordo {
+            vc.id_add_ordo = self.id_ordo
+        } else if let vc = segue.destination as? medecin {
+            vc.id_medecin = self.id_ordo
+        } else if let vc = segue.destination as? ViewController  {
+            vc.id = self.id_ordo
+        }
+    }
+}
